@@ -1,0 +1,6 @@
+{
+  "name": "UniStay",
+  "description": "Student-living intelligence platform helping students discover, verify, compare, understand the real cost of living, and confidently choose accommodation near their university.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
