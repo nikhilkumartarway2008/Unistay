@@ -133,30 +133,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = async (role: 'STUDENT' | 'OWNER' = 'STUDENT'): Promise<UserProfile> => {
     if (!auth) {
-      throw new Error("Firebase Auth is not initialized.");
+      throw new Error("Firebase Auth is not initialized. Please verify Firebase configuration.");
     }
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const googleUser = result.user;
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const googleUser = result.user;
 
-    const res = await fetch('/api/auth/google', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: googleUser.email,
-        fullName: googleUser.displayName || googleUser.email?.split('@')[0],
-        googleId: googleUser.uid,
-        role
-      })
-    });
-    const data = await parseResponseSafely(res);
-    if (!res.ok) throw new Error(data.error || 'Google login failed');
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: googleUser.email,
+          fullName: googleUser.displayName || googleUser.email?.split('@')[0],
+          googleId: googleUser.uid,
+          role
+        })
+      });
+      const data = await parseResponseSafely(res);
+      if (!res.ok) throw new Error(data.error || 'Google login failed');
 
-    localStorage.setItem('unistay_token', data.token);
-    setToken(data.token);
-    setUser(data.user);
-    loadSavedProperties(data.token);
-    return data.user;
+      localStorage.setItem('unistay_token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+      loadSavedProperties(data.token);
+      return data.user;
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      if (error?.code === 'auth/popup-closed-by-user') {
+        throw new Error('Google sign-in popup was closed before completing. Please try again.');
+      }
+      if (error?.code === 'auth/unauthorized-domain') {
+        throw new Error('This domain is not authorized for Google Sign-In in Firebase Console. Please add it to Authentication -> Settings -> Authorized domains.');
+      }
+      if (error?.code === 'auth/popup-blocked') {
+        throw new Error('Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.');
+      }
+      if (error?.message && error.message.includes('Firebase:')) {
+        throw new Error(`Firebase Authentication error: ${error.message}`);
+      }
+      throw new Error(error?.message || 'Google sign-in failed. Please try again.');
+    }
   };
 
   const logout = async () => {

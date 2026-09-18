@@ -28,6 +28,8 @@ import { OwnerAiScreen } from './components/OwnerAiScreen';
 // Owner Screens
 import { OwnerDashboardScreen } from './components/OwnerDashboardScreen';
 import { OwnerAddPropertyScreen } from './components/OwnerAddPropertyScreen';
+import { OwnerWorkspace } from './components/OwnerWorkspace';
+import { useAuth } from './context/AuthContext';
 
 // Phase 5 Screens
 import { CommunityScreen } from './components/CommunityScreen';
@@ -72,6 +74,7 @@ import { SignupScreen } from './components/SignupScreen';
 import { ExpenseItem } from './types';
 
 export default function App() {
+  const { user } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('welcome');
   const [userRole, setUserRole] = useState<UserRole>('student');
   const [currentCity, setCurrentCity] = useState<string>('Bengaluru');
@@ -104,6 +107,18 @@ export default function App() {
   const handleAddBooking = (booking: BookingRecord) => {
     setBookings(prev => [booking, ...prev]);
   };
+
+  // ROLE-BASED AUTOMATIC ROUTING: If user is authenticated as OWNER, render professional OwnerWorkspace
+  if (user && (user.role === 'OWNER' || user.role?.toLowerCase() === 'owner')) {
+    return (
+      <OwnerWorkspace 
+        properties={properties}
+        onAddProperty={handleAddProperty}
+        onUpdateProperty={handleUpdateProperty}
+        onDeleteProperty={handleDeleteProperty}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-zinc-900 font-sans antialiased selection:bg-orange-500 selection:text-white">

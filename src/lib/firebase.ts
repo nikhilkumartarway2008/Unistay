@@ -9,7 +9,7 @@ let authInstance: any = null;
 
 try {
   app = initializeApp(firebaseConfig);
-  dbInstance = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+  dbInstance = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
   authInstance = getAuth(app);
 
   // Test connection

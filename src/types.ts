@@ -195,6 +195,7 @@ export interface PropertyItem {
   studyScore?: string;
   privacyScore?: string;
   foodAvailable?: boolean;
+  ownerId?: string;
 }
 
 export interface CostItem {
