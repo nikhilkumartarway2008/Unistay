@@ -183,6 +183,7 @@ export interface PropertyItem {
   distance: string;
   category: 'PG / Hostel' | 'Flat' | 'Shared' | 'Near Campus';
   image: string;
+  images?: string[];
   verified: boolean;
   saved: boolean;
   // Enhanced attributes for Phase 3 matching
@@ -190,6 +191,7 @@ export interface PropertyItem {
   distanceKm?: number;
   amenitiesList?: string[];
   roomType?: string;
+  roomTypes?: Array<{ name: string; rent: number; capacity: string; description?: string }>;
   studyScore?: string;
   privacyScore?: string;
   foodAvailable?: boolean;

@@ -246,6 +246,119 @@ app.post("/api/auth/signup", async (req, res) => {
   }
 });
 
+app.post("/api/auth/google", async (req, res) => {
+  try {
+    const { email, fullName, googleId, role = 'STUDENT' } = req.body;
+    if (!email || !googleId) {
+      return res.status(400).json({ error: "Google email and id required." });
+    }
+
+    const normalizedPhone = 'google_' + googleId;
+    let userId = '';
+
+    if (getIsConnected()) {
+      const existing = await pool.query("SELECT id, role FROM users WHERE phone_number = $1", [normalizedPhone]);
+      if (existing.rows.length > 0) {
+        userId = existing.rows[0].id;
+      } else {
+        const client = await pool.connect();
+        try {
+          await client.query("BEGIN");
+          const userRes = await client.query(
+            `INSERT INTO users (phone_number, password_hash, security_question, security_answer_hash, role, phone_verified) 
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+            [normalizedPhone, 'google_oauth', 'Google Sign-In', 'google', role, true]
+          );
+          userId = userRes.rows[0].id;
+          await client.query(
+            `INSERT INTO profiles (user_id, full_name, university_id, city_id) VALUES ($1, $2, $3, $4)`,
+            [userId, fullName || email.split('@')[0], 'DU', 'Delhi']
+          );
+          await client.query(
+            `INSERT INTO student_preferences (user_id, budget_min, budget_max, university_id) VALUES ($1, 5000, 25000, 'DU') ON CONFLICT (user_id) DO NOTHING`,
+            [userId]
+          );
+          await client.query("COMMIT");
+          client.release();
+        } catch (e) {
+          try {
+            await pool.query("ROLLBACK");
+          } catch {}
+          throw e;
+        }
+      }
+
+      const token = generateSessionToken();
+      const expiresAt = new Date(Date.now() + 7 * 24 * 3600 * 1000);
+      await pool.query(
+        `INSERT INTO sessions (user_id, token, expires_at) VALUES ($1, $2, $3)`,
+        [userId, token, expiresAt]
+      );
+
+      const profileRes = await pool.query(
+        `SELECT u.id, u.phone_number, u.role, p.full_name, p.university_id, p.city_id FROM users u LEFT JOIN profiles p ON u.id = p.user_id WHERE u.id = $1`,
+        [userId]
+      );
+
+      return res.json({
+        token,
+        user: {
+          id: userId,
+          phoneNumber: profileRes.rows[0].phone_number,
+          role: profileRes.rows[0].role,
+          fullName: profileRes.rows[0].full_name || fullName,
+          universityId: profileRes.rows[0].university_id || 'DU',
+          cityId: profileRes.rows[0].city_id || 'Delhi'
+        }
+      });
+    } else {
+      let foundUserId = '';
+      for (const [id, u] of memoryStore.users.entries()) {
+        if (u.phone_number === normalizedPhone) {
+          foundUserId = id;
+          break;
+        }
+      }
+      if (!foundUserId) {
+        foundUserId = `user_google_${Date.now()}`;
+        memoryStore.users.set(foundUserId, {
+          id: foundUserId,
+          phone_number: normalizedPhone,
+          role: role,
+          phone_verified: true
+        });
+        memoryStore.profiles.set(foundUserId, {
+          user_id: foundUserId,
+          full_name: fullName || email.split('@')[0],
+          university_id: 'DU',
+          city_id: 'Delhi'
+        });
+      }
+      const user = memoryStore.users.get(foundUserId);
+      const profile = memoryStore.profiles.get(foundUserId);
+      const token = generateSessionToken();
+      memoryStore.sessions.set(foundUserId, {
+        token,
+        expires_at: new Date(Date.now() + 7 * 24 * 3600 * 1000)
+      });
+      return res.json({
+        token,
+        user: {
+          id: foundUserId,
+          phoneNumber: user.phone_number,
+          role: user.role,
+          fullName: profile.full_name,
+          universityId: profile.university_id,
+          cityId: profile.city_id
+        }
+      });
+    }
+  } catch (err: any) {
+    console.error("Google auth error:", err);
+    res.status(500).json({ error: err.message || "Google authentication failed" });
+  }
+});
+
 app.post("/api/auth/get-security-question", async (req, res) => {
   try {
     const { phoneNumber } = req.body;
@@ -752,24 +865,37 @@ app.post("/api/ai-chat", async (req, res) => {
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: `${systemPersona}
-              Authenticated User Role: ${userRole}
-              Context: ${context || 'General inquiry'}
-              User Prompt: ${prompt}`
-            }
-          ]
-        }
-      ]
-    });
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: `${systemPersona}
+                Authenticated User Role: ${userRole}
+                Context: ${context || 'General inquiry'}
+                User Prompt: ${prompt}`
+              }
+            ]
+          }
+        ]
+      });
 
-    res.json({ reply: response.text || "UniStay AI is ready to assist you." });
+      res.json({ reply: response.text || "UniStay AI is ready to assist you." });
+    } catch (aiError: any) {
+      console.warn("Gemini API error / Quota exhausted, falling back to smart assistant response:", aiError.message);
+      let fallbackReply = "";
+      if (userRole === 'OWNER') {
+        fallbackReply = `UniStay Owner AI (Smart Assistant): Regarding "${prompt}", your properties are listed and active. You can manage room inventory, pricing, and bookings in your Owner Dashboard. (Note: AI quota reached, operating in offline assistant mode).`;
+      } else if (userRole === 'ADMIN') {
+        fallbackReply = `UniStay Admin AI (Smart Assistant): Regarding "${prompt}", system security and property verification queues are running normally. (Note: AI quota reached, operating in offline assistant mode).`;
+      } else {
+        fallbackReply = `UniStay Student AI (Smart Assistant): Regarding "${prompt}", I recommend exploring our verified Trust Passports, checking True Living Cost estimates, and selecting room types that fit your university schedule. (Note: AI quota reached, operating in offline assistant mode).`;
+      }
+      res.json({ reply: fallbackReply });
+    }
   } catch (error: any) {
     console.error("AI Role-Aware Error:", error);
     res.status(500).json({ error: error.message || "Failed to generate AI response" });

@@ -1,0 +1,68 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "fullName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "phoneNumber": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 20
+        },
+        "role": {
+          "type": "string",
+          "enum": ["STUDENT", "OWNER", "ADMIN"]
+        }
+      },
+      "required": ["id", "fullName", "phoneNumber", "role"]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "Student accommodation property",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 150
+        },
+        "rent": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        }
+      },
+      "required": ["id", "name"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "User profiles collection"
+    },
+    "/properties/{propertyId}": {
+      "schema": {
+        "$ref": "#/entities/Property"
+      },
+      "description": "Properties collection"
+    }
+  }
+}

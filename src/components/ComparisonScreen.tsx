@@ -96,39 +96,53 @@ export const ComparisonScreen: React.FC<ComparisonScreenProps> = ({ onNavigate }
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Selected Stays ({selectedProperties.length}/3)</h3>
           <button 
-            onClick={() => alert("Add stay functionality connects to explore search")}
+            onClick={() => onNavigate('explore')}
             className="text-xs font-bold text-orange-600 hover:underline"
           >
             + Add stay
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {selectedProperties.map((prop, idx) => (
-            <div key={prop.id || idx} className="bg-white rounded-[24px] border border-orange-100/80 p-4 shadow-xs relative flex items-center gap-4">
-              <div className="w-20 h-20 rounded-2xl overflow-hidden bg-zinc-200 shrink-0">
-                <img src={prop.image} alt={prop.name} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                    {prop.matchPercentage} Match
-                  </span>
-                  <button 
-                    onClick={() => handleRemoveProperty(prop.id)}
-                    className="text-zinc-400 hover:text-red-500 p-1"
-                    title="Remove"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+        {selectedProperties.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-orange-100 p-10 text-center">
+            <GitCompare className="w-10 h-10 text-orange-300 mx-auto mb-3" />
+            <h4 className="font-bold text-sm text-zinc-900 mb-1">No properties in comparison</h4>
+            <p className="text-xs text-zinc-500 mb-4">Explore and select student stays to compare side-by-side.</p>
+            <button
+              onClick={() => onNavigate('explore')}
+              className="px-5 py-2.5 rounded-xl bg-orange-500 text-white font-semibold text-xs shadow-md"
+            >
+              Explore Accommodations
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {selectedProperties.map((prop, idx) => (
+              <div key={prop.id || idx} className="bg-white rounded-[24px] border border-orange-100/80 p-4 shadow-xs relative flex items-center gap-4">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-zinc-200 shrink-0">
+                  <img src={prop.image} alt={prop.name} className="w-full h-full object-cover" />
                 </div>
-                <h4 className="font-bold text-xs text-zinc-900 truncate">{prop.name}</h4>
-                <div className="text-[11px] text-zinc-500 truncate mb-1">{prop.location}</div>
-                <div className="text-xs font-bold text-orange-600">{prop.rent}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                      {prop.matchPercentage} Match
+                    </span>
+                    <button 
+                      onClick={() => handleRemoveProperty(prop.id)}
+                      className="text-zinc-400 hover:text-red-500 p-1"
+                      title="Remove"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <h4 className="font-bold text-xs text-zinc-900 truncate">{prop.name}</h4>
+                  <div className="text-[11px] text-zinc-500 truncate mb-1">{prop.location}</div>
+                  <div className="text-xs font-bold text-orange-600">{prop.rent}</div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Navigation Sub-Tabs for Mobile/Desktop */}

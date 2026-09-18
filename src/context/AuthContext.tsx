@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export interface UserProfile {
   id: string;
@@ -17,8 +19,9 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phoneNumber: string, password: string) => Promise<void>;
-  signup: (fullName: string, phoneNumber: string, password: string, role: 'STUDENT' | 'OWNER', universityId?: string, cityId?: string, securityQuestion?: string, securityAnswer?: string) => Promise<void>;
+  login: (phoneNumber: string, password: string) => Promise<UserProfile>;
+  signup: (fullName: string, phoneNumber: string, password: string, role: 'STUDENT' | 'OWNER', universityId?: string, cityId?: string, securityQuestion?: string, securityAnswer?: string) => Promise<UserProfile>;
+  loginWithGoogle: (role?: 'STUDENT' | 'OWNER') => Promise<UserProfile>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<UserProfile>) => Promise<void>;
   savedProperties: string[];
@@ -97,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (phoneNumber: string, password: string) => {
+  const login = async (phoneNumber: string, password: string): Promise<UserProfile> => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -110,9 +113,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(data.token);
     setUser(data.user);
     loadSavedProperties(data.token);
+    return data.user;
   };
 
-  const signup = async (fullName: string, phoneNumber: string, password: string, role: 'STUDENT' | 'OWNER', universityId?: string, cityId?: string, securityQuestion?: string, securityAnswer?: string) => {
+  const signup = async (fullName: string, phoneNumber: string, password: string, role: 'STUDENT' | 'OWNER', universityId?: string, cityId?: string, securityQuestion?: string, securityAnswer?: string): Promise<UserProfile> => {
     const res = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -124,6 +128,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('unistay_token', data.token);
     setToken(data.token);
     setUser(data.user);
+    return data.user;
+  };
+
+  const loginWithGoogle = async (role: 'STUDENT' | 'OWNER' = 'STUDENT'): Promise<UserProfile> => {
+    if (!auth) {
+      throw new Error("Firebase Auth is not initialized.");
+    }
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const googleUser = result.user;
+
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: googleUser.email,
+        fullName: googleUser.displayName || googleUser.email?.split('@')[0],
+        googleId: googleUser.uid,
+        role
+      })
+    });
+    const data = await parseResponseSafely(res);
+    if (!res.ok) throw new Error(data.error || 'Google login failed');
+
+    localStorage.setItem('unistay_token', data.token);
+    setToken(data.token);
+    setUser(data.user);
+    loadSavedProperties(data.token);
+    return data.user;
   };
 
   const logout = async () => {
@@ -200,6 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading,
       login,
       signup,
+      loginWithGoogle,
       logout,
       updateProfile,
       savedProperties,

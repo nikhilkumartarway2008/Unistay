@@ -30,7 +30,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({ onNavi
           Select Your Role & Start Exploring
         </h1>
         <p className="text-sm sm:text-base text-zinc-600">
-          Choose your role to instantly experience UniStay without password login required.
+          Choose your role and sign in to securely access UniStay.
         </p>
       </div>
 
@@ -40,7 +40,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({ onNavi
         <div 
           onClick={() => {
             onSelectRole('student');
-            onNavigate('dashboard');
+            onNavigate('login');
           }}
           className="bg-white rounded-[32px] border-2 border-orange-200/80 hover:border-orange-500 p-8 sm:p-10 shadow-sm hover:shadow-xl transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
         >
@@ -51,7 +51,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({ onNavi
             </div>
 
             <div className="text-xs font-bold uppercase tracking-wider text-orange-600 mb-1">Student Portal</div>
-            <h3 className="text-2xl font-bold text-zinc-900 mb-3">Explore as Student</h3>
+            <h3 className="text-2xl font-bold text-zinc-900 mb-3">Login as Student</h3>
             <p className="text-sm text-zinc-600 mb-6 leading-relaxed">
               Find a trusted place to live, explore verified stays, compare true living costs, and preview your daily campus life.
             </p>
@@ -64,7 +64,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({ onNavi
           </div>
 
           <div className="relative z-10 flex items-center justify-between pt-6 border-t border-orange-100 font-bold text-sm text-orange-600 group-hover:translate-x-1 transition-transform">
-            <span>Start Using as Student</span>
+            <span>Proceed to Login</span>
             <ArrowRight className="w-5 h-5" />
           </div>
         </div>
@@ -73,7 +73,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({ onNavi
         <div 
           onClick={() => {
             onSelectRole('owner');
-            onNavigate('dashboard');
+            onNavigate('login');
           }}
           className="bg-white rounded-[32px] border-2 border-orange-200/80 hover:border-orange-500 p-8 sm:p-10 shadow-sm hover:shadow-xl transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden"
         >
@@ -84,7 +84,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({ onNavi
             </div>
 
             <div className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">Owner Portal</div>
-            <h3 className="text-2xl font-bold text-zinc-900 mb-3">Explore as Property Owner</h3>
+            <h3 className="text-2xl font-bold text-zinc-900 mb-3">Login as Owner</h3>
             <p className="text-sm text-zinc-600 mb-6 leading-relaxed">
               List and manage your property, verify your identity, receive student enquiries, and handle bookings securely.
             </p>
@@ -97,7 +97,7 @@ export const RoleSelectionScreen: React.FC<RoleSelectionScreenProps> = ({ onNavi
           </div>
 
           <div className="relative z-10 flex items-center justify-between pt-6 border-t border-orange-100 font-bold text-sm text-amber-700 group-hover:translate-x-1 transition-transform">
-            <span>Start Using as Owner</span>
+            <span>Proceed to Login</span>
             <ArrowRight className="w-5 h-5" />
           </div>
         </div>

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Shield, Phone, Lock, User, GraduationCap, Building2, ArrowRight, ArrowLeft, Eye, EyeOff, HelpCircle } from 'lucide-react';
-import { ScreenType } from '../types';
+import { ScreenType, UserRole } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 interface SignupScreenProps {
   onNavigate: (screen: ScreenType) => void;
+  setUserRole: (role: UserRole) => void;
 }
 
 const SECURITY_QUESTIONS = [
@@ -15,7 +16,7 @@ const SECURITY_QUESTIONS = [
   "What was your childhood nickname?"
 ];
 
-export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigate }) => {
+export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigate, setUserRole }) => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +33,22 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigate }) => {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
+
+  const handleGoogleSignup = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const userProfile = await loginWithGoogle(role);
+      const r: UserRole = userProfile.role === 'OWNER' ? 'owner' : 'student';
+      setUserRole(r);
+      onNavigate(r === 'owner' ? 'owner-dashboard' : 'dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Google sign up failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +69,10 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigate }) => {
 
     setLoading(true);
     try {
-      await signup(fullName, phoneNumber, password, role, universityId, cityId, securityQuestion, securityAnswer);
-      onNavigate('dashboard');
+      const userProfile = await signup(fullName, phoneNumber, password, role, universityId, cityId, securityQuestion, securityAnswer);
+      const r: UserRole = userProfile.role === 'OWNER' ? 'owner' : 'student';
+      setUserRole(r);
+      onNavigate(r === 'owner' ? 'owner-dashboard' : 'dashboard');
     } catch (err: any) {
       setError(err.message || 'Signup failed.');
     } finally {
@@ -236,6 +254,27 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ onNavigate }) => {
             >
               <span>{loading ? 'Creating Account...' : 'Create Account & Start'}</span>
               <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-zinc-200"></div>
+              <span className="flex-shrink mx-4 text-[10px] uppercase font-bold tracking-wider text-zinc-400">or</span>
+              <div className="flex-grow border-t border-zinc-200"></div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGoogleSignup}
+              disabled={loading}
+              className="w-full py-3.5 rounded-2xl bg-white border border-zinc-200 text-zinc-800 text-xs font-bold hover:bg-zinc-50 shadow-xs transition-all flex items-center justify-center gap-2.5"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.95H1.2v3.15C3.18 21.31 7.27 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.25c-.25-.72-.38-1.49-.38-2.25s.13-1.53.38-2.25V6.6H1.2C.44 8.13 0 9.87 0 12s.44 3.87 1.2 5.4l4.08-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.27 0 3.18 2.69 1.2 6.6l4.08 3.15c.95-2.84 3.6-4.95 6.72-4.95z"/>
+              </svg>
+              <span>Continue with Google</span>
             </button>
           </form>
 

@@ -360,6 +360,44 @@ export const PropertyDetailsScreen: React.FC<PropertyDetailsScreenProps> = ({ on
         </div>
       </div>
 
+      {/* 5.5 ROOM TYPES SECTION */}
+      <div className="bg-white rounded-[28px] border border-orange-100/80 p-6 sm:p-8 shadow-xs mb-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center">
+            <Building2 className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-zinc-900">Available Room Types</h3>
+            <p className="text-xs text-zinc-500">Choose from owner-listed room configurations</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {(property?.roomTypes && property.roomTypes.length > 0 ? property.roomTypes : [
+            { name: 'Single Occupancy Room', rent: 16000, capacity: '1 Person', description: 'Private furnished room with attached washroom & study desk.' },
+            { name: 'Double Sharing Room', rent: 11000, capacity: '2 Persons', description: 'Spacious twin sharing room with individual wardrobes.' }
+          ]).map((rt, idx) => (
+            <div key={idx} className="p-5 rounded-2xl bg-[#FAF8F5] border border-orange-100 hover:border-orange-500 transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-sm text-zinc-900">{rt.name}</span>
+                  <span className="text-[11px] font-bold text-orange-700 bg-orange-100 px-2.5 py-1 rounded-xl">{rt.capacity}</span>
+                </div>
+                <div className="text-lg font-bold text-orange-600 mb-2">₹{rt.rent.toLocaleString()} <span className="text-xs font-normal text-zinc-500">/ mo</span></div>
+                <p className="text-xs text-zinc-600 mb-4">{rt.description}</p>
+              </div>
+              <button
+                onClick={() => onNavigate('booking')}
+                className="w-full py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs transition-colors shadow-xs flex items-center justify-center gap-2"
+              >
+                <span>Select & Book This Room</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* 6. LIFE PREVIEW */}
       <div className="bg-white rounded-[28px] border border-orange-100/80 p-6 sm:p-8 shadow-xs mb-8">
         <div className="flex items-center justify-between mb-6">

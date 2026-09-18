@@ -79,12 +79,8 @@ export default function App() {
 
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
-  const [expenses, setExpenses] = useState<ExpenseItem[]>([
-    { id: '1', title: 'Scholar Haven Rent Payment', category: 'Rent', amount: 9500, date: 'Oct 01, 2026', type: 'Fixed' },
-    { id: '2', title: 'Monthly Campus Mess Tiffin', category: 'Food', amount: 3200, date: 'Oct 02, 2026', type: 'Estimated' },
-    { id: '3', title: 'Metro Transit Pass', category: 'Transport', amount: 800, date: 'Oct 03, 2026', type: 'Variable' }
-  ]);
-  const [selectedProperty, setSelectedProperty] = useState<PropertyItem | null>(PLACEHOLDER_PROPERTIES[0] || null);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyItem | null>(null);
   const [studentPreferences, setStudentPreferences] = useState<StudentPreferences | null>(null);
   const [isAiOpen, setIsAiOpen] = useState(false);
 
@@ -347,10 +343,10 @@ export default function App() {
           <SuperPlatformOverview onNavigate={handleNavigate} currentCity={currentCity} />
         )}
         {currentScreen === 'login' && (
-          <LoginScreen onNavigate={handleNavigate} />
+          <LoginScreen onNavigate={handleNavigate} setUserRole={setUserRole} />
         )}
         {currentScreen === 'signup' && (
-          <SignupScreen onNavigate={handleNavigate} />
+          <SignupScreen onNavigate={handleNavigate} setUserRole={setUserRole} />
         )}
 
 
